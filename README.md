@@ -1,2 +1,2 @@
-# Cat-logo-de-Filmes-e-S-ries
+# Catlogo de Filmes e Séries
 TRABALHO PRÁTICO - POO
