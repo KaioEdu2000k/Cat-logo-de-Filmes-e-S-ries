@@ -1,1 +1,61 @@
+public abstract class Midia
+{
+    public int Id { get; private set; }
+    public string? Titulo { get; set; }
+    public List<string> Genero { get; set; }
+    public int AnoLancamento { get; set; }
+    public string? Sinopse { get; set; }
 
+    public List<Avaliacao> avaliacoes { get; set; } = new List<Avaliacao>();
+
+    public double MediaNota
+    {
+        get
+        {
+            if (MediaNota == 0)
+            {
+                return 0;
+            }
+            return avaliacoes.Average(a => a.Nota);
+        }
+    } 
+}
+
+public class Filme : Midia
+{
+    public string? Diretor { get; set; }
+    public int Duracao { get; set; }
+}
+
+public class Serie : Midia
+{
+    public int TotalTemporadas { get; set; }
+    public string? StatusExibicao { get; set; }
+    public Dictionary<int, int> EpisodiosPorTemporada { get; set; } = new Dictionary<int, int>();
+}
+
+public class Usuario
+{
+    public int Id { get; set; }
+    public string? Nome { get; set; }
+    public string? Email { get; set; }
+}
+
+public class Avaliacao
+{
+    public int IdAvaliacao { get; set; }
+    public int IdMidia { get; set; }
+    public int IdUsuario { get; set; }
+    public int Nota { get; set; } 
+    public string? Comentario { get; set; }
+    public DateTime DataAvaliacao { get; set; } = DateTime.Now;
+}
+
+public class ListaPersonalizada
+{
+    public int IdLista { get; set; }
+    public int IdUsuario { get; set; }
+    public string? NomeLista { get; set; }
+        
+    public List<int> Midias { get; set; } = new List<int>();
+}
