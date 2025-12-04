@@ -1,30 +1,121 @@
-public abstract class Midia
+using System;
+using System.Collections.Generic;
+
+interface IAvaliavel
+{
+    void AdicionarAvaliacao(Avaliacao avaliacao);
+}
+
+public abstract class Midia : IAvaliavel
 {
     public int Id { get; private set; }
     public string? Titulo { get; set; }
-    public List<string> Genero { get; set; }
+    public List<string> Genero { get; set; } = new List<string>();
     public int AnoLancamento { get; set; }
     public string? Sinopse { get; set; }
 
     public List<Avaliacao> avaliacoes { get; set; } = new List<Avaliacao>();
 
+    public Midia(int Id, string Titulo, int AnoLancamento, string Sinopse)
+    {
+        this.Id = Id;
+        this.Titulo = Titulo;
+        this.AnoLancamento = AnoLancamento;
+        this.Sinopse = Sinopse;
+    }
+
     public double MediaNota
     {
         get
         {
-            if (MediaNota == 0)
+            if (avaliacoes.Count == 0)
             {
                 return 0;
             }
             return avaliacoes.Average(a => a.Nota);
         }
-    } 
+    }
+
+    public abstract void ExibirInfo();
+
+    public void AdicionarAvaliacao(Avaliacao avaliacao)
+    {
+        if (avaliacao.Nota < 0 || avaliacao.Nota > 10)
+        {
+            throw new Exception("A nota deve estar entre 0 e 10");
+        }
+
+        avaliacoes.Add(avaliacao);
+    }
 }
 
-public class Filme : Midia
+public partial class Filme : Midia
 {
     public string? Diretor { get; set; }
     public int Duracao { get; set; }
+
+    public Filme(int Id, string Titulo, int AnoLancamento, string Sinopse, string Diretor, int Duracao)
+        : base(Id, Titulo, AnoLancamento, Sinopse)
+    {
+        this.Diretor = Diretor;
+        this.Duracao = Duracao;
+    }
+
+    public override void ExibirInfo()
+    {
+        Console.WriteLine(
+            $"Filme : {Titulo} | ID: {Id} | Diretor: {Diretor} | Duração: {Duracao} | " +
+            $"Gênero: {string.Join(", ", Genero)} | Ano: {AnoLancamento} | Sinopse: {Sinopse}"
+        );
+    }
+
+    public void AdicionarAvaliacao(Avaliacao avaliacao)
+    {
+        base.AdicionarAvaliacao(avaliacao);
+    }
+}
+
+
+public partial class Filme
+{
+    public class Premio
+    {
+        public string? nome;
+        public int ano;
+
+        public Premio(string nome, int ano)
+        {
+            this.nome = nome;
+            this.ano = ano;
+        }
+
+        List<Premio> premios = new List<Premio>();
+
+        public void InformarPremio()
+        {
+            try
+            {
+                Console.WriteLine("Informe o nome do prêmio:");
+                nome = Console.ReadLine();
+
+                Console.WriteLine("Informe o ano do prêmio:");
+                ano = int.Parse(Console.ReadLine()!);
+
+                premios.Add(new Premio(nome!, ano));
+
+                Console.WriteLine($"Prêmio: {nome} adicionado com sucesso!");
+
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Erro: o ano deve ser numérico!");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Erro! {e.Message}");
+            }
+        }
+    }
 }
 
 public class Serie : Midia
@@ -32,6 +123,26 @@ public class Serie : Midia
     public int TotalTemporadas { get; set; }
     public string? StatusExibicao { get; set; }
     public Dictionary<int, int> EpisodiosPorTemporada { get; set; } = new Dictionary<int, int>();
+
+    public Serie(int Id, string Titulo, int AnoLancamento, string Sinopse, int TotalTemporadas, string StatusExibicao)
+        : base(Id, Titulo, AnoLancamento, Sinopse)
+    {
+        this.TotalTemporadas = TotalTemporadas;
+        this.StatusExibicao = StatusExibicao;
+    }
+
+    public override void ExibirInfo()
+    {
+        Console.WriteLine(
+            $"Série : {Titulo} | ID: {Id} | Gênero: {string.Join(", ", Genero)} | " +
+            $"Temporadas: {TotalTemporadas} | Status: {StatusExibicao} | Ano: {AnoLancamento} | Sinopse: {Sinopse}"
+        );
+    }
+
+    public void AdicionarAvaliacao(Avaliacao avaliacao)
+    {
+        base.AdicionarAvaliacao(avaliacao);
+    }
 }
 
 public class Usuario
@@ -39,6 +150,19 @@ public class Usuario
     public int Id { get; set; }
     public string? Nome { get; set; }
     public string? Email { get; set; }
+
+    public Usuario(int Id, string Nome, string Email)
+    {
+        this.Id = Id;
+        this.Nome = Nome;
+        this.Email = Email;
+    }
+
+    public void AdicionarConta()
+    {
+        Console.WriteLine("===Conta criada com sucesso!===");
+        Console.WriteLine($"Id de usuário: {Id} | Nome: {Nome} | E-mail: {Email}");
+    }
 }
 
 public class Avaliacao
@@ -46,7 +170,7 @@ public class Avaliacao
     public int IdAvaliacao { get; set; }
     public int IdMidia { get; set; }
     public int IdUsuario { get; set; }
-    public int Nota { get; set; } 
+    public int Nota { get; set; }
     public string? Comentario { get; set; }
     public DateTime DataAvaliacao { get; set; } = DateTime.Now;
 }
@@ -56,6 +180,60 @@ public class ListaPersonalizada
     public int IdLista { get; set; }
     public int IdUsuario { get; set; }
     public string? NomeLista { get; set; }
-        
+
     public List<int> Midias { get; set; } = new List<int>();
+
+
+    public ListaPersonalizada(int IdLista, int IdUsuario, string NomeLista)
+    {
+        this.IdLista = IdLista;
+        this.IdUsuario = IdUsuario;
+        this.NomeLista = NomeLista;
+    }
+
+    public void AdicionarMidiaNaLista(Usuario usuario, Midia midia)
+    {
+        try
+        {
+
+            if (usuario.Id != IdUsuario)
+            {
+                Console.WriteLine("Erro: esta lista não pertence a este usuário.");
+                return;
+            }
+
+            Console.WriteLine("Informe o Id da midia que você quer adicionar a lista:");
+            int Idmidia = int.Parse(Console.ReadLine()!);
+
+            if (midia == null)
+            {
+                Console.WriteLine("Mídia Inválida!");
+                return;
+            }
+
+            if (Idmidia != midia.Id)
+            {
+                Console.WriteLine("O id informado não corresponde a mídia fornecida!");
+                return;
+            }
+
+            Midias.Add(Idmidia);
+
+            Console.WriteLine($"Mídia: {midia.Titulo} adicionada á lista {NomeLista} com sucesso!");
+
+
+        }
+        catch (FormatException)
+        {
+            Console.WriteLine("Erro: digite um número válido");
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+
+    }
 }
