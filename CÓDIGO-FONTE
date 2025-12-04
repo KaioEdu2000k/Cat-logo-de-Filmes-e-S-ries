@@ -1,9 +1,24 @@
 using System;
 using System.Collections.Generic;
 
-interface IAvaliavel
+public interface IAvaliavel
 {
     void AdicionarAvaliacao(Avaliacao avaliacao);
+}
+
+public interface Ipesquisavel
+{
+    bool PossuiAvaliacao(Avaliacao avaliacao);                //Interfaces
+}
+
+public interface IRemovível
+{
+    void Remover();
+}
+
+public interface IAtualizar
+{
+    void Atualizar();
 }
 
 public abstract class Midia : IAvaliavel
@@ -14,7 +29,7 @@ public abstract class Midia : IAvaliavel
     public int AnoLancamento { get; set; }
     public string? Sinopse { get; set; }
 
-    public List<Avaliacao> avaliacoes { get; set; } = new List<Avaliacao>();
+    protected List<Avaliacao> avaliacoes { get; set; } = new List<Avaliacao>();            // Classe abstrata
 
     public Midia(int Id, string Titulo, int AnoLancamento, string Sinopse)
     {
@@ -49,12 +64,12 @@ public abstract class Midia : IAvaliavel
     }
 }
 
-public partial class Filme : Midia
+public partial class Filme : Midia, Ipesquisavel, IAtualizar
 {
     public string? Diretor { get; set; }
     public int Duracao { get; set; }
 
-    public Filme(int Id, string Titulo, int AnoLancamento, string Sinopse, string Diretor, int Duracao)
+    public Filme(int Id, string Titulo, int AnoLancamento, string Sinopse, string Diretor, int Duracao)          // Classe parcial
         : base(Id, Titulo, AnoLancamento, Sinopse)
     {
         this.Diretor = Diretor;
@@ -72,6 +87,21 @@ public partial class Filme : Midia
     public void AdicionarAvaliacao(Avaliacao avaliacao)
     {
         base.AdicionarAvaliacao(avaliacao);
+    }
+
+    public bool PossuiAvaliacao(Avaliacao ava)
+    {
+        if (!avaliacoes.Contains(ava))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public void Atualizar()
+    {
+        Console.WriteLine($"Atualizando informações sobre o filme: {Titulo}");
     }
 }
 
@@ -151,6 +181,7 @@ public class Usuario
     public string? Nome { get; set; }
     public string? Email { get; set; }
 
+    public List<Midia> Favoritos { get; set; } = new List<Midia>();
     public Usuario(int Id, string Nome, string Email)
     {
         this.Id = Id;
@@ -163,19 +194,51 @@ public class Usuario
         Console.WriteLine("===Conta criada com sucesso!===");
         Console.WriteLine($"Id de usuário: {Id} | Nome: {Nome} | E-mail: {Email}");
     }
+
+    public void FavoritarMidia(Midia midia)
+    {
+        if (midia == null)
+        {
+            Console.WriteLine("Mídia inválida!");
+            return;
+        }
+
+        Favoritos.Add(midia);
+        Console.WriteLine($"Mídia {midia.Titulo} adicionada aos favoritos.");
+    }
 }
 
-public class Avaliacao
+public sealed class Avaliacao
 {
-    public int IdAvaliacao { get; set; }
     public int IdMidia { get; set; }
-    public int IdUsuario { get; set; }
+    protected int IdUsuario { get; set; }
     public int Nota { get; set; }
-    public string? Comentario { get; set; }
-    public DateTime DataAvaliacao { get; set; } = DateTime.Now;
+    protected string Comentario { get; set; }
+    protected DateTime DataAvaliacao { get; set; } = DateTime.Now;
+
+    public Avaliacao(int IdMidia, int IdUsuario, int Nota, string Comentario)      // Classe selada
+    {
+
+        this.IdMidia = IdMidia;
+        this.IdUsuario = IdUsuario;
+        this.Nota = Nota;
+        this.Comentario = Comentario;
+        DataAvaliacao = DateTime.Now;
+    }
+
+    public void ExibirHistoricodeAvalaicao()
+    {
+        Console.WriteLine(
+             $"Última avaliação do usuário {IdUsuario}:\n" +
+             $"• Nota: {Nota}\n" +
+             $"• ID da mídia: {IdMidia}\n" +
+             $"• Data: {DataAvaliacao}\n" +
+             $"• Comentário: {Comentario}"
+         );
+    }
 }
 
-public class ListaPersonalizada
+public class ListaPersonalizada : IRemovível
 {
     public int IdLista { get; set; }
     public int IdUsuario { get; set; }
@@ -189,6 +252,11 @@ public class ListaPersonalizada
         this.IdLista = IdLista;
         this.IdUsuario = IdUsuario;
         this.NomeLista = NomeLista;
+    }
+
+    public void Remover()
+    {
+        Console.WriteLine($"A lista {NomeLista} foi removida!");
     }
 
     public void AdicionarMidiaNaLista(Usuario usuario, Midia midia)
@@ -235,5 +303,233 @@ class Program
     static void Main(string[] args)
     {
 
+        //Programa principal
+
+        List<Usuario> usuarios = new List<Usuario>();
+        List<Midia> midias = new List<Midia>();
+        List<ListaPersonalizada> listas = new List<ListaPersonalizada>();
+
+        bool rodando = true;
+                                                                      
+        while (rodando)
+        {
+            Console.WriteLine("\n=== Catálogo de Filmes e Séries ===");
+            Console.WriteLine("1. Cadastrar usuário");
+            Console.WriteLine("2. Cadastrar filme");
+            Console.WriteLine("3. Cadastrar série");
+            Console.WriteLine("4. Avaliar mídia");
+            Console.WriteLine("5. Criar lista personalizada");
+            Console.WriteLine("6. Adicionar mídia à lista");
+            Console.WriteLine("7. Visualizar mídias");                                      
+            Console.WriteLine("0. Sair");
+            Console.Write("Escolha uma opção: ");
+
+            string? opcao = Console.ReadLine();
+
+            switch (opcao)
+            {
+                case "1":
+                    Console.Write("Nome do usuário: ");
+                    string nome = Console.ReadLine()!;
+                    Console.Write("Email do usuário: ");
+                    string email = Console.ReadLine()!;
+                    int idUsuario = usuarios.Count + 1;
+                    Usuario novoUsuario = new Usuario(idUsuario, nome, email);
+                    usuarios.Add(novoUsuario);
+                    novoUsuario.AdicionarConta();
+                    break;
+
+                case "2":
+                    Console.Write("Título do filme: ");
+                    string tituloFilme = Console.ReadLine()!;
+                    Console.Write("Ano de lançamento: ");
+                    int anoFilme = int.Parse(Console.ReadLine()!);
+                    Console.Write("Sinopse: ");
+                    string sinopseFilme = Console.ReadLine()!;
+                    Console.Write("Diretor: ");
+                    string diretor = Console.ReadLine()!;
+                    Console.Write("Duração (minutos): ");
+                    int duracao = int.Parse(Console.ReadLine()!);
+
+                    int idMidiaFilme = midias.Count + 1;
+                    Filme filme = new Filme(idMidiaFilme, tituloFilme, anoFilme, sinopseFilme, diretor, duracao);
+                    midias.Add(filme);
+
+                    Console.WriteLine($"Filme {tituloFilme} cadastrado com sucesso!");
+                    break;
+
+                case "3":
+                    Console.Write("Título da série: ");
+                    string tituloSerie = Console.ReadLine()!;
+                    Console.Write("Ano de lançamento: ");
+                    int anoSerie = int.Parse(Console.ReadLine()!);
+                    Console.Write("Sinopse: ");
+                    string sinopseSerie = Console.ReadLine()!;
+                    Console.Write("Total de temporadas: ");
+                    int temporadas = int.Parse(Console.ReadLine()!);
+                    Console.Write("Status de exibição: ");
+                    string status = Console.ReadLine()!;
+
+                    int idMidiaSerie = midias.Count + 1;
+                    Serie serie = new Serie(idMidiaSerie, tituloSerie, anoSerie, sinopseSerie, temporadas, status);
+                    midias.Add(serie);
+
+                    Console.WriteLine($"Série {tituloSerie} cadastrada com sucesso!");
+                    break;
+
+                case "4":
+                    if (midias.Count == 0 || usuarios.Count == 0)
+                    {
+                        Console.WriteLine("Cadastre pelo menos uma mídia e um usuário primeiro!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha a mídia para avaliar (ID):");
+                    foreach (var m in midias)
+                        Console.WriteLine($"{m.Id} - {m.Titulo}");
+                    int idAvaliar = int.Parse(Console.ReadLine()!);
+                    Midia? midiaAvaliar = midias.Find(m => m.Id == idAvaliar);
+
+                    if (midiaAvaliar == null)
+                    {
+                        Console.WriteLine("Mídia não encontrada!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha o usuário (ID):");
+                    foreach (var u in usuarios)
+                        Console.WriteLine($"{u.Id} - {u.Nome}");
+                    int idU = int.Parse(Console.ReadLine()!);
+                    Usuario? userAvaliar = usuarios.Find(u => u.Id == idU);
+
+                    if (userAvaliar == null)
+                    {
+                        Console.WriteLine("Usuário não encontrado!");
+                        break;
+                    }
+
+                    Console.Write("Nota (0-10): ");
+                    int nota = int.Parse(Console.ReadLine()!);
+                    Console.Write("Comentário: ");
+                    string comentario = Console.ReadLine()!;
+
+                    try
+                    {
+                        Avaliacao avaliacao = new Avaliacao(midiaAvaliar.Id, userAvaliar.Id, nota, comentario);
+                        midiaAvaliar.AdicionarAvaliacao(avaliacao);
+                        Console.WriteLine("Avaliação adicionada com sucesso!");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Erro ao adicionar avaliação: {e.Message}");
+                    }
+                    break;
+
+                case "5":
+                    if (usuarios.Count == 0)
+                    {
+                        Console.WriteLine("Cadastre pelo menos um usuário primeiro!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha o usuário dono da lista (ID):");
+                    foreach (var u in usuarios)
+                        Console.WriteLine($"{u.Id} - {u.Nome}");
+                    int idUserLista = int.Parse(Console.ReadLine()!);
+                    Usuario? dono = usuarios.Find(u => u.Id == idUserLista);
+
+                    if (dono == null)
+                    {
+                        Console.WriteLine("Usuário não encontrado!");
+                        break;
+                    }
+
+                    Console.Write("Nome da lista: ");
+                    string nomeLista = Console.ReadLine()!;
+                    int idLista = listas.Count + 1;
+                    ListaPersonalizada lista = new ListaPersonalizada(idLista, dono.Id, nomeLista);
+                    listas.Add(lista);
+
+                    Console.WriteLine($"Lista {nomeLista} criada com sucesso!");
+                    break;
+
+                case "6":
+                    if (listas.Count == 0 || midias.Count == 0 || usuarios.Count == 0)
+                    {
+                        Console.WriteLine("Cadastre pelo menos uma lista, uma mídia e um usuário primeiro!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha a lista (ID):");
+                    foreach (var l in listas)
+                        Console.WriteLine($"{l.IdLista} - {l.NomeLista} (Usuário ID: {l.IdUsuario})");
+                    int idL = int.Parse(Console.ReadLine()!);
+                    ListaPersonalizada? listaEscolhida = listas.Find(l => l.IdLista == idL);
+
+                    if (listaEscolhida == null)
+                    {
+                        Console.WriteLine("Lista não encontrada!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha a mídia para adicionar (ID):");
+                    foreach (var m in midias)
+                        Console.WriteLine($"{m.Id} - {m.Titulo}");
+                    int idMidiaAdd = int.Parse(Console.ReadLine()!);
+                    Midia? midiaAdd = midias.Find(m => m.Id == idMidiaAdd);
+
+                    if (midiaAdd == null)
+                    {
+                        Console.WriteLine("Mídia não encontrada!");
+                        break;
+                    }
+
+                    Console.WriteLine("Escolha o usuário que está adicionando (ID):");
+                    foreach (var u in usuarios)
+                        Console.WriteLine($"{u.Id} - {u.Nome}");
+                    int idUadd = int.Parse(Console.ReadLine()!);
+                    Usuario? userAdd = usuarios.Find(u => u.Id == idUadd);
+
+                    if (userAdd == null)
+                    {
+                        Console.WriteLine("Usuário não encontrado!");
+                        break;
+                    }
+
+                    listaEscolhida.AdicionarMidiaNaLista(userAdd, midiaAdd);
+                    break;
+
+                case "7":
+                    Console.WriteLine("=== Mídias cadastradas ===");
+                    foreach (var m in midias)
+                        m.ExibirInfo();
+                    break;
+
+                case "0":
+                    rodando = false;
+                    break;
+
+                default:
+                    Console.WriteLine("Opção inválida!");
+                    break;
+            }
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
