@@ -310,7 +310,7 @@ class Program
         List<ListaPersonalizada> listas = new List<ListaPersonalizada>();
 
         bool rodando = true;
-                                                                      
+
         while (rodando)
         {
             Console.WriteLine("\n=== Catálogo de Filmes e Séries ===");
@@ -320,7 +320,11 @@ class Program
             Console.WriteLine("4. Avaliar mídia");
             Console.WriteLine("5. Criar lista personalizada");
             Console.WriteLine("6. Adicionar mídia à lista");
-            Console.WriteLine("7. Visualizar mídias");                                      
+            Console.WriteLine("7. Visualizar mídias");
+            Console.WriteLine("8. Atualizar filme");
+            Console.WriteLine("9. Verificar se filme possui avaliação");
+            Console.WriteLine("10. Remover lista personalizada");
+            Console.WriteLine("11. Adicionar prêmio ao filme");
             Console.WriteLine("0. Sair");
             Console.Write("Escolha uma opção: ");
 
@@ -505,6 +509,70 @@ class Program
                         m.ExibirInfo();
                     break;
 
+                case "8":
+                    Console.Write("ID do filme para atualizar: ");
+                    int idAtt = int.Parse(Console.ReadLine()!);
+
+                    Filme? fAtt = midias.Find(m => m.Id == idAtt) as Filme;
+
+                    if (fAtt != null)
+                        fAtt.Atualizar();
+                    else
+                        Console.WriteLine("Filme não encontrado!");
+                    break;
+                
+                case "9":
+                    Console.Write("ID do filme: ");
+                    int idPesq = int.Parse(Console.ReadLine()!);
+
+                    Filme? fPesq = midias.Find(m => m.Id == idPesq) as Filme;
+
+                    if (fPesq == null)
+                    {
+                        Console.WriteLine("Filme não encontrado!");
+                        break;
+                    }
+
+                    Console.Write("Digite a nota (só pra criar avaliação temporária): ");
+                    int n = int.Parse(Console.ReadLine()!);
+
+                    Avaliacao avaTemp = new Avaliacao(fPesq.Id, 0, n, "temp");
+
+                    bool existe = fPesq.PossuiAvaliacao(avaTemp);
+
+                    Console.WriteLine(existe
+                        ? "Esse filme já possui essa avaliação."
+                        : "Esse filme NÃO possui essa avaliação.");
+                    break;
+                
+                case "10":
+                    Console.Write("ID da lista para remover: ");
+                    int idRem = int.Parse(Console.ReadLine()!);
+
+                    ListaPersonalizada? listaRem = listas.Find(l => l.IdLista == idRem);
+
+                    if (listaRem != null)
+                        listaRem.Remover();
+                    else
+                        Console.WriteLine("Lista não encontrada!");
+                    break;
+                
+                case "11":
+                    Console.Write("ID do filme: ");
+                    int idPremio = int.Parse(Console.ReadLine()!);
+
+                    Filme? fPremio = midias.Find(m => m.Id == idPremio) as Filme;
+
+                    if (fPremio == null)
+                    {
+                        Console.WriteLine("Filme não encontrado!");
+                        break;
+                    }
+
+                    Filme.Premio premio = new Filme.Premio("", 0);
+                    premio.InformarPremio();
+                    break;
+
                 case "0":
                     rodando = false;
                     break;
@@ -532,4 +600,3 @@ class Program
 
 
 
-    
