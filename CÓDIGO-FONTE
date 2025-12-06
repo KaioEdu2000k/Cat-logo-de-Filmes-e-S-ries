@@ -25,18 +25,19 @@ public abstract class Midia : IAvaliavel
 {
     public int Id { get; private set; }
     public string? Titulo { get; set; }
-    public List<string> Genero { get; set; } = new List<string>();
+    public string Genero { get; set; }
     public int AnoLancamento { get; set; }
     public string? Sinopse { get; set; }
 
     protected List<Avaliacao> avaliacoes { get; set; } = new List<Avaliacao>();            // Classe abstrata
 
-    public Midia(int Id, string Titulo, int AnoLancamento, string Sinopse)
+    public Midia(int Id, string Titulo, string Genero, int AnoLancamento, string Sinopse)
     {
         this.Id = Id;
         this.Titulo = Titulo;
         this.AnoLancamento = AnoLancamento;
         this.Sinopse = Sinopse;
+        this.Genero = Genero;
     }
 
     public double MediaNota
@@ -69,8 +70,10 @@ public partial class Filme : Midia, Ipesquisavel, IAtualizar
     public string? Diretor { get; set; }
     public int Duracao { get; set; }
 
-    public Filme(int Id, string Titulo, int AnoLancamento, string Sinopse, string Diretor, int Duracao)          // Classe parcial
-        : base(Id, Titulo, AnoLancamento, Sinopse)
+
+
+    public Filme(int Id, string Titulo, string Genero, int AnoLancamento, string Sinopse, string Diretor, int Duracao)          // Classe parcial
+        : base(Id, Titulo, Genero, AnoLancamento, Sinopse)
     {
         this.Diretor = Diretor;
         this.Duracao = Duracao;
@@ -80,7 +83,7 @@ public partial class Filme : Midia, Ipesquisavel, IAtualizar
     {
         Console.WriteLine(
             $"Filme : {Titulo} | ID: {Id} | Diretor: {Diretor} | Duração: {Duracao} | " +
-            $"Gênero: {string.Join(", ", Genero)} | Ano: {AnoLancamento} | Sinopse: {Sinopse}"
+            $"Gênero: {Genero} | Ano: {AnoLancamento} | Sinopse: {Sinopse}"
         );
     }
 
@@ -154,8 +157,8 @@ public class Serie : Midia
     public string? StatusExibicao { get; set; }
     public Dictionary<int, int> EpisodiosPorTemporada { get; set; } = new Dictionary<int, int>();
 
-    public Serie(int Id, string Titulo, int AnoLancamento, string Sinopse, int TotalTemporadas, string StatusExibicao)
-        : base(Id, Titulo, AnoLancamento, Sinopse)
+    public Serie(int Id, string Titulo, string Genero, int AnoLancamento, string Sinopse, int TotalTemporadas, string StatusExibicao)
+        : base(Id, Titulo, Genero, AnoLancamento, Sinopse)
     {
         this.TotalTemporadas = TotalTemporadas;
         this.StatusExibicao = StatusExibicao;
@@ -164,7 +167,7 @@ public class Serie : Midia
     public override void ExibirInfo()
     {
         Console.WriteLine(
-            $"Série : {Titulo} | ID: {Id} | Gênero: {string.Join(", ", Genero)} | " +
+            $"Série : {Titulo} | ID: {Id} | Gênero: {Genero} | " +
             $"Temporadas: {TotalTemporadas} | Status: {StatusExibicao} | Ano: {AnoLancamento} | Sinopse: {Sinopse}"
         );
     }
@@ -270,7 +273,7 @@ public class ListaPersonalizada : IRemovível
                 return;
             }
 
-            Console.WriteLine("Informe o Id da midia que você quer adicionar a lista:");
+            Console.WriteLine("Informe o Id da midia que você quer adicionar a lista (confirmação):");
             int Idmidia = int.Parse(Console.ReadLine()!);
 
             if (midia == null)
@@ -322,9 +325,9 @@ class Program
             Console.WriteLine("6. Adicionar mídia à lista");
             Console.WriteLine("7. Visualizar mídias");
             Console.WriteLine("8. Atualizar filme");
-            Console.WriteLine("9. Verificar se filme possui avaliação");
+            Console.WriteLine("9. Verificar se um filme possui avaliação");
             Console.WriteLine("10. Remover lista personalizada");
-            Console.WriteLine("11. Adicionar prêmio ao filme");
+            Console.WriteLine("11. Adicionar prêmio a uma mídia");
             Console.WriteLine("0. Sair");
             Console.Write("Escolha uma opção: ");
 
@@ -352,11 +355,12 @@ class Program
                     string sinopseFilme = Console.ReadLine()!;
                     Console.Write("Diretor: ");
                     string diretor = Console.ReadLine()!;
+                    Console.WriteLine("Gênero:");
+                    string genero = Console.ReadLine()!;
                     Console.Write("Duração (minutos): ");
                     int duracao = int.Parse(Console.ReadLine()!);
-
                     int idMidiaFilme = midias.Count + 1;
-                    Filme filme = new Filme(idMidiaFilme, tituloFilme, anoFilme, sinopseFilme, diretor, duracao);
+                    Filme filme = new Filme(idMidiaFilme, tituloFilme, genero, anoFilme, sinopseFilme, diretor, duracao);
                     midias.Add(filme);
 
                     Console.WriteLine($"Filme {tituloFilme} cadastrado com sucesso!");
@@ -371,11 +375,13 @@ class Program
                     string sinopseSerie = Console.ReadLine()!;
                     Console.Write("Total de temporadas: ");
                     int temporadas = int.Parse(Console.ReadLine()!);
+                    Console.WriteLine("Gênero:");
+                    string genero2 = Console.ReadLine()!;
                     Console.Write("Status de exibição: ");
                     string status = Console.ReadLine()!;
 
                     int idMidiaSerie = midias.Count + 1;
-                    Serie serie = new Serie(idMidiaSerie, tituloSerie, anoSerie, sinopseSerie, temporadas, status);
+                    Serie serie = new Serie(idMidiaSerie, tituloSerie, genero2, anoSerie, sinopseSerie, temporadas, status);
                     midias.Add(serie);
 
                     Console.WriteLine($"Série {tituloSerie} cadastrada com sucesso!");
@@ -510,43 +516,59 @@ class Program
                     break;
 
                 case "8":
-                    Console.Write("ID do filme para atualizar: ");
+                    Console.WriteLine("Escolha a mídia para atualizar (ID):");
+                    foreach (var m in midias)
+                        Console.WriteLine($"{m.Id} - {m.Titulo}");
                     int idAtt = int.Parse(Console.ReadLine()!);
 
-                    Filme? fAtt = midias.Find(m => m.Id == idAtt) as Filme;
+                    Midia? midiaAtt = midias.Find(m => m.Id == idAtt);
 
-                    if (fAtt != null)
-                        fAtt.Atualizar();
+                    if (midiaAtt is IAtualizar atualizavel)
+                    {
+                        atualizavel.Atualizar();
+                    }
                     else
-                        Console.WriteLine("Filme não encontrado!");
+                    {
+                        Console.WriteLine("Essa mídia não pode ser atualizada.");
+                    }
                     break;
-                
+
                 case "9":
-                    Console.Write("ID do filme: ");
+                    Console.WriteLine("Escolha a mídia para verificar se possui avaliação (ID):");
+                    foreach (var m in midias)
+                        Console.WriteLine($"{m.Id} - {m.Titulo}");
                     int idPesq = int.Parse(Console.ReadLine()!);
 
-                    Filme? fPesq = midias.Find(m => m.Id == idPesq) as Filme;
+                    Midia? midiaPesq = midias.Find(m => m.Id == idPesq);
 
-                    if (fPesq == null)
+                    if (midiaPesq == null)
                     {
-                        Console.WriteLine("Filme não encontrado!");
+                        Console.WriteLine("Mídia não encontrada!");
                         break;
                     }
 
                     Console.Write("Digite a nota (só pra criar avaliação temporária): ");
                     int n = int.Parse(Console.ReadLine()!);
 
-                    Avaliacao avaTemp = new Avaliacao(fPesq.Id, 0, n, "temp");
+                    Avaliacao avaTemp = new Avaliacao(midiaPesq.Id, 0, n, "temp");
 
-                    bool existe = fPesq.PossuiAvaliacao(avaTemp);
-
-                    Console.WriteLine(existe
-                        ? "Esse filme já possui essa avaliação."
-                        : "Esse filme NÃO possui essa avaliação.");
+                    if (midiaPesq is Ipesquisavel pesquisavel)
+                    {
+                        bool existe = pesquisavel.PossuiAvaliacao(avaTemp);
+                        Console.WriteLine(existe
+                            ? "Essa mídia já possui essa avaliação."
+                            : "Essa mídia NÃO possui essa avaliação.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Essa mídia não permite pesquisa de avaliação (Ipesquisavel não implementado).");
+                    }
                     break;
-                
+
                 case "10":
-                    Console.Write("ID da lista para remover: ");
+                    Console.WriteLine("Escolha a lista (ID):");
+                    foreach (var l in listas)
+                        Console.WriteLine($"{l.IdLista} - {l.NomeLista} (Usuário ID: {l.IdUsuario})");
                     int idRem = int.Parse(Console.ReadLine()!);
 
                     ListaPersonalizada? listaRem = listas.Find(l => l.IdLista == idRem);
@@ -556,14 +578,16 @@ class Program
                     else
                         Console.WriteLine("Lista não encontrada!");
                     break;
-                
+
                 case "11":
-                    Console.Write("ID do filme: ");
+                    Console.WriteLine("Escolha a mídia para verificar se possui avaliação (ID):");
+                    foreach (var m in midias)
+                        Console.WriteLine($"{m.Id} - {m.Titulo}");
                     int idPremio = int.Parse(Console.ReadLine()!);
 
-                    Filme? fPremio = midias.Find(m => m.Id == idPremio) as Filme;
+                    Midia? midiaPremio = midias.Find(m => m.Id == idPremio);
 
-                    if (fPremio == null)
+                    if (midiaPremio == null)
                     {
                         Console.WriteLine("Filme não encontrado!");
                         break;
@@ -584,19 +608,3 @@ class Program
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
